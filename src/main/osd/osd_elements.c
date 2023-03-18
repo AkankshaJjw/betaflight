@@ -1248,47 +1248,31 @@ static void osdElementMainBatteryUsage(osdElementParms_t *element)
 
     switch (element->type) {
     case OSD_ELEMENT_TYPE_3:  // mAh remaining percentage (counts down as battery is used)
-        {
-            if (batteryConfig()->usingCurrentSensor) {
-                displayBasis = constrain(batteryConfig()->batteryCapacity - usedCapacity, 0, batteryConfig()->batteryCapacity);
-                FALLTHROUGH;
-            } else {
-                int displayRemPercent = getBatteryPercentageGlobal(); 
-                tfp_sprintf(element->buff, "%c%d%%", SYM_MAH, displayRemPercent);
-                break;
-            }
+        {  
+            displayBasis = constrain(batteryConfig()->batteryCapacity - usedCapacity, 0, batteryConfig()->batteryCapacity);
+            FALLTHROUGH;
         }
 
     case OSD_ELEMENT_TYPE_4:  // mAh used percentage (counts up as battery is used)
         {
             int displayPercent = 0;
-            if (batteryConfig()->usingCurrentSensor) {
-                if (batteryConfig()->batteryCapacity) {
-                    displayPercent = constrain(lrintf(100.0f * displayBasis / batteryConfig()->batteryCapacity), 0, 100);
-                }
-            } else {
-                    displayPercent = 100 - getBatteryPercentageGlobal(); 
+            if (batteryConfig()->batteryCapacity) {
+                displayPercent = constrain(lrintf(100.0f * displayBasis / batteryConfig()->batteryCapacity), 0, 100);
             }
             tfp_sprintf(element->buff, "%c%d%%", SYM_MAH, displayPercent);
             break;
         }
 
     case OSD_ELEMENT_TYPE_2:  // mAh used graphical progress bar (grows as battery is used)
-        //displayBasis = constrain(batteryConfig()->batteryCapacity - usedCapacity, 0, batteryConfig()->batteryCapacity);
+        displayBasis = constrain(batteryConfig()->batteryCapacity - usedCapacity, 0, batteryConfig()->batteryCapacity);
         FALLTHROUGH;
 
     case OSD_ELEMENT_TYPE_1:  // mAh remaining graphical progress bar (shrinks as battery is used)
     default:
         {
             uint8_t remainingCapacityBars = 0;
-
-            if (batteryConfig()->usingCurrentSensor && batteryConfig()->batteryCapacity) {
-                const float batteryRemaining = constrain(batteryConfig()->batteryCapacity - displayBasis, 0, batteryConfig()->batteryCapacity);
-                remainingCapacityBars = ceilf((batteryRemaining / (batteryConfig()->batteryCapacity / MAIN_BATT_USAGE_STEPS)));
-            } else {
-                remainingCapacityBars = ceilf((getBatteryPercentageGlobal()/100.0f  * MAIN_BATT_USAGE_STEPS));
-                DEBUG_SET(DEBUG_FILT_VOLTAGE, 0, remainingCapacityBars);
-            }
+            const float batteryRemaining = constrain(batteryConfig()->batteryCapacity - displayBasis, 0, batteryConfig()->batteryCapacity);
+            remainingCapacityBars = ceilf((batteryRemaining / (batteryConfig()->batteryCapacity / MAIN_BATT_USAGE_STEPS)));
             // Create empty battery indicator bar
             element->buff[0] = SYM_PB_START;
             for (int i = 1; i <= MAIN_BATT_USAGE_STEPS; i++) {
